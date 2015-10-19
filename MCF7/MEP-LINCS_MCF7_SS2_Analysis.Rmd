@@ -22,6 +22,7 @@ cellLine <- "MCF7"
 
 
 ```{r setup}
+
 library("ggplot2")
 library("data.table")
 library("MEMA")
@@ -30,20 +31,16 @@ library(knitr)
 library("gplots")
 library("RColorBrewer")
 
-  
 #Setup colors for Barcode and text in all heatmaps
 selDark2 <- colorRampPalette(brewer.pal(8,"Dark2"))
 plateCol = selDark2(8)
+selReds <- colorRampPalette(brewer.pal(9,"Reds"))
+redsPal <- selReds(10)
 
 l1 <- fread(paste0("./",ss,"/AnnotatedData/",cellLine,"_",ss,"_Level1.txt"), showProgress = FALSE)
 l2 <- fread(paste0("./",ss,"/AnnotatedData/",cellLine,"_",ss,"_Level2.txt"), showProgress = FALSE)
-l3 <- data.table(read.table(paste0("./",ss,"/AnnotatedData/",cellLine,"_",ss,"_Level3.txt"), header = TRUE, stringsAsFactors = FALSE), key = "MEP")
-l4 <- data.table(read.table(paste0("./",ss,"/AnnotatedData/",cellLine,"_",ss,"_Level4.txt"), header = TRUE, stringsAsFactors = FALSE), key = "MEP")
-
-#Work around issue in fread about logicals read as characters
-l1$Spot_PA_Perimeter <- as.logical(gsub(" ","",l1$Spot_PA_Perimeter))
-l1$Spot_PA_Sparse <- as.logical(gsub(" ","",l1$Spot_PA_Sparse))
-l1$Spot_PA_OuterCell <- as.logical(gsub(" ","",l1$Spot_PA_OuterCell))
+l3 <- fread(paste0("./",ss,"/AnnotatedData/",cellLine,"_",ss,"_Level3.txt"), showProgress = FALSE)
+l4 <- fread(paste0("./",ss,"/AnnotatedData/",cellLine,"_",ss,"_Level4.txt"), showProgress = FALSE)
 
 barcodes <- sort(unique(l3$Barcode))
 
@@ -301,7 +298,7 @@ DT$Barcode <- as.factor(DT$Barcode)
 fullBio <- DT[,grep("RZSNorm|MEP|Ligand|ECMp|Barcode",colnames(DT), value=TRUE), with = FALSE]
 
 #Reduce to biologically relevant
-fullBio <- fullBio[,grep("[.](1|2)|Cells|Cytoplasm.*Dapi|Cytoplasm.*Area|CellMask|Center|Nuclei.*KRT|_SE|Euler|Logit|2N|4N", colnames(fullBio), value = TRUE, invert = TRUE), with = FALSE]
+fullBio <- fullBio[,grep("[.](1|2)|Cells|Cytoplasm.*Dapi|Cytoplasm.*Area|CellMask|Center|Nuclei.*KRT|_SE|Euler|Logit|4N", colnames(fullBio), value = TRUE, invert = TRUE), with = FALSE]
 #Reduce to biologically minimal choice
 fullBio <- fullBio[,grep("Actin|Integrated|Dapi", colnames(fullBio), value = TRUE, invert = TRUE), with = FALSE]
 
@@ -350,7 +347,7 @@ l4PCAModel <- prcomp(as.formula(paste(" ~ ", paste(PCFVNames, collapse = "+"))),
 #Extract the first PCs of each MEP into a matrix
 l4pcvDT <- data.table(l4PCAModel$x[,1:nrPCs],Barcode =DT$Barcode, MEP = DT$MEP)
 
-m <- as.matrix(l4pcvDT[,grep("Ligand|ECMp|MEP|Barcode|2N|4N",x = colnames(l4pcvDT), value = TRUE, invert = TRUE), with = FALSE])
+m <- as.matrix(l4pcvDT[,grep("Ligand|ECMp|MEP|Barcode|4N",x = colnames(l4pcvDT), value = TRUE, invert = TRUE), with = FALSE])
 rownames(m) <- l4pcvDT$MEP
 
 full <- heatmap.2(m, col = bluered, scale = "column", trace = "none", cexRow=.5, cexCol=2, cex.main=.5, key=TRUE, keysize = 1.5, key.title = NA, key.ylab = NA, density.info="none", 
